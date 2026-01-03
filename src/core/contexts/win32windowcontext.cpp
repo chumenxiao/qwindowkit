@@ -934,6 +934,12 @@ namespace QWK {
                                                     const QVariant &oldAttribute) {
         Q_UNUSED(oldAttribute)
 
+        // Handle system-menu attribute (doesn't require hwnd)
+        if (key == QStringLiteral("system-menu")) {
+            systemMenuEnabled = attribute.toBool();
+            return true;
+        }
+
         const auto hwnd = reinterpret_cast<HWND>(m_windowId);
         Q_ASSERT(hwnd);
 
@@ -2338,7 +2344,7 @@ namespace QWK {
             default:
                 break;
         }
-        if (shouldShowSystemMenu) {
+        if (shouldShowSystemMenu && systemMenuEnabled) {
             static HHOOK mouseHook = nullptr;
             static std::optional<POINT> mouseClickPos;
             static bool mouseDoubleClicked = false;
