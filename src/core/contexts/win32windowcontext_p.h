@@ -79,6 +79,9 @@ namespace QWK {
 
         // Whether the system menu is enabled (default: true)
         bool systemMenuEnabled = true;
+
+        // Whether double-click on title bar to maximize is enabled (default: true)
+        bool titleBarDoubleClickMaximizeEnabled = true;
     };
 
 }

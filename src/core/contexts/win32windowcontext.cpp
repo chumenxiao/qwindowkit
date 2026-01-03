@@ -940,6 +940,12 @@ namespace QWK {
             return true;
         }
 
+        // Handle title-bar-double-click-maximize attribute (doesn't require hwnd)
+        if (key == QStringLiteral("title-bar-double-click-maximize")) {
+            titleBarDoubleClickMaximizeEnabled = attribute.toBool();
+            return true;
+        }
+
         const auto hwnd = reinterpret_cast<HWND>(m_windowId);
         Q_ASSERT(hwnd);
 
@@ -1926,6 +1932,15 @@ namespace QWK {
                 const auto windowPos = reinterpret_cast<LPWINDOWPOS>(lParam);
                 if (windowPos->flags == kBadWindowPosFlag) {
                     windowPos->flags |= SWP_NOCOPYBITS;
+                }
+                break;
+            }
+
+            case WM_NCLBUTTONDBLCLK: {
+                // Block double-click maximize if disabled
+                if (!titleBarDoubleClickMaximizeEnabled && wParam == HTCAPTION) {
+                    *result = 0;
+                    return true;
                 }
                 break;
             }
