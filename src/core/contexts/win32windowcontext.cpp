@@ -930,6 +930,15 @@ namespace QWK {
         return false; // Not handled
     }
 
+    void Win32WindowContext::setWindowTopmost(bool topmost) {
+        if (!m_windowId) {
+            return;
+        }
+        HWND hWnd = reinterpret_cast<HWND>(m_windowId);
+        ::SetWindowPos(hWnd, topmost ? HWND_TOPMOST : HWND_NOTOPMOST, 0, 0, 0, 0,
+                       SWP_NOMOVE | SWP_NOSIZE | SWP_NOACTIVATE);
+    }
+
     bool Win32WindowContext::windowAttributeChanged(const QString &key, const QVariant &attribute,
                                                     const QVariant &oldAttribute) {
         Q_UNUSED(oldAttribute)
@@ -943,6 +952,12 @@ namespace QWK {
         // Handle title-bar-double-click-maximize attribute (doesn't require hwnd)
         if (key == QStringLiteral("title-bar-double-click-maximize")) {
             titleBarDoubleClickMaximizeEnabled = attribute.toBool();
+            return true;
+        }
+
+        // Handle stay-on-top attribute using Win32 API (doesn't rebuild window)
+        if (key == QStringLiteral("stay-on-top")) {
+            setWindowTopmost(attribute.toBool());
             return true;
         }
 

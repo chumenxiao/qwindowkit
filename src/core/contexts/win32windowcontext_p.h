@@ -82,6 +82,10 @@ namespace QWK {
 
         // Whether double-click on title bar to maximize is enabled (default: true)
         bool titleBarDoubleClickMaximizeEnabled = true;
+
+    public:
+        // Set window topmost without rebuilding the window (Windows only)
+        void setWindowTopmost(bool topmost);
     };
 
 }
