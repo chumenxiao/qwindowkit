@@ -83,6 +83,11 @@ namespace QWK {
         // Whether double-click on title bar to maximize is enabled (default: true)
         bool titleBarDoubleClickMaximizeEnabled = true;
 
+        // Whether system button tooltips are enabled (default: true)
+        // When false, returns HTCLIENT for min/close buttons to disable system tooltips
+        // but keeps HTZOOM for maximize button to preserve Snap Layout
+        bool systemButtonTooltipEnabled = true;
+
     public:
         // Set window topmost without rebuilding the window (Windows only)
         void setWindowTopmost(bool topmost);

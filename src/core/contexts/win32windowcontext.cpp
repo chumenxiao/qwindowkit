@@ -955,6 +955,13 @@ namespace QWK {
             return true;
         }
 
+        // Handle system-button-tooltip attribute (doesn't require hwnd)
+        // When false, disables system tooltips for min/close buttons but keeps Snap Layout
+        if (key == QStringLiteral("system-button-tooltip")) {
+            systemButtonTooltipEnabled = attribute.toBool();
+            return true;
+        }
+
         // Handle stay-on-top attribute using Win32 API (doesn't rebuild window)
         if (key == QStringLiteral("stay-on-top")) {
             setWindowTopmost(attribute.toBool());
@@ -1720,13 +1727,18 @@ namespace QWK {
                                 *result = HTHELP;
                                 break;
                             case WindowAgentBase::Minimize:
-                                *result = HTREDUCE;
+                                // When system-button-tooltip is disabled, return HTCLIENT to
+                                // prevent Windows from showing system tooltip
+                                *result = systemButtonTooltipEnabled ? HTREDUCE : HTCLIENT;
                                 break;
                             case WindowAgentBase::Maximize:
+                                // Always return HTZOOM to preserve Snap Layout functionality
                                 *result = HTZOOM;
                                 break;
                             case WindowAgentBase::Close:
-                                *result = HTCLOSE;
+                                // When system-button-tooltip is disabled, return HTCLIENT to
+                                // prevent Windows from showing system tooltip
+                                *result = systemButtonTooltipEnabled ? HTCLOSE : HTCLIENT;
                                 break;
                             default:
                                 // unreachable
