@@ -88,6 +88,11 @@ namespace QWK {
         // but keeps HTZOOM for maximize button to preserve Snap Layout
         bool systemButtonTooltipEnabled = true;
 
+        // Whether window resize is disabled (default: false)
+        // When true, returns HTCLIENT for all resize borders to disable system resize
+        // This is useful for Qt.Tool windows where top resize doesn't work properly
+        bool resizeDisabled = false;
+
     public:
         // Set window topmost without rebuilding the window (Windows only)
         void setWindowTopmost(bool topmost);

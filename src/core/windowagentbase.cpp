@@ -116,6 +116,9 @@ namespace QWK {
             \li \c title-bar-height: Returns the system title bar height, some system features may
                    be related to this property so that it is recommended to set the custom title bar
                    height to this value. (Readonly)
+            \li \c disable-resize: Specify a boolean value to disable system resize. When true,
+                   all resize borders will return HTCLIENT, allowing custom resize handlers to
+                   take over. This is useful for Qt.Tool windows where top resize doesn't work.
 
         On macOS,
             \li \c no-system-buttons: Specify a boolean value to set the system buttons'

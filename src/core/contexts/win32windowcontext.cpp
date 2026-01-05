@@ -968,6 +968,13 @@ namespace QWK {
             return true;
         }
 
+        // Handle disable-resize attribute (doesn't require hwnd)
+        // When true, disables system resize by returning HTCLIENT for all resize borders
+        if (key == QStringLiteral("disable-resize")) {
+            resizeDisabled = attribute.toBool();
+            return true;
+        }
+
         const auto hwnd = reinterpret_cast<HWND>(m_windowId);
         Q_ASSERT(hwnd);
 
@@ -1655,7 +1662,7 @@ namespace QWK {
 
                 bool isFixedWidth = isHostWidthFixed();
                 bool isFixedHeight = isHostHeightFixed();
-                bool isFixedSize = isHostSizeFixed();
+                bool isFixedSize = isHostSizeFixed() || resizeDisabled;
                 bool isInLeftBorder = nativeLocalPos.x <= frameSize;
                 bool isInTopBorder = nativeLocalPos.y <= frameSize;
                 bool isInRightBorder = nativeLocalPos.x > clientWidth - frameSize;
