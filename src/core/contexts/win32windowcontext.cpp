@@ -94,10 +94,15 @@ namespace QWK {
     }
 
     static void setInternalWindowFrameMargins(QWindow *window, const QMargins &margins) {
+#if QT_VERSION >= QT_VERSION_CHECK(6, 7, 0)
+        Q_UNUSED(window);
+        Q_UNUSED(margins);
         // https://github.com/stdware/qwindowkit/issues/48
-        // Now we seem do not need this workaround anymore.
-        return;
-
+        // We don't need this workaround anymore since Qt 6.7.0 or so.
+        // The accurate version can't be determined because it's fixed by a series
+        // of patches applied in different times. But according to my research
+        // 6.7.0 should contain most of them.
+#else // < 6.7.0
         const QVariant marginsVar = QVariant::fromValue(margins);
 
         // We need to tell Qt we have set a custom margin, because we are hiding
@@ -105,19 +110,20 @@ namespace QWK {
         // this however confuses Qt's internal logic. We need to do the following
         // hack to let Qt consider the extra margin when changing window geometry.
         window->setProperty("_q_windowsCustomMargins", marginsVar);
-#if QT_VERSION < QT_VERSION_CHECK(6, 0, 0)
+#  if QT_VERSION < QT_VERSION_CHECK(6, 0, 0)
         if (QPlatformWindow *platformWindow = window->handle()) {
             if (const auto ni = QGuiApplication::platformNativeInterface()) {
                 ni->setWindowProperty(platformWindow, QStringLiteral("WindowsCustomMargins"),
                                       marginsVar);
             }
         }
-#else
+#  else // >= 6.0.0
         if (const auto platformWindow =
                 dynamic_cast<QNativeInterface::Private::QWindowsWindow *>(window->handle())) {
             platformWindow->setCustomMargins(margins);
         }
-#endif
+#  endif // < 6.0.0
+#endif // >= 6.7.0
     }
 
     static inline MONITORINFOEXW getMonitorForWindow(HWND hwnd) {
@@ -601,10 +607,10 @@ namespace QWK {
             return FALSE;
         }
 
-        // Search window context
+        // QWindow may have been destroyed before WinIdChange event comes
         auto ctx = g_wndProcHash->value(hWnd);
-        if (!ctx) {
-            return ::DefWindowProcW(hWnd, message, wParam, lParam);
+        if (!ctx || !ctx->window()) {
+            return ::CallWindowProcW(g_qtWindowProc, hWnd, message, wParam, lParam);
         }
 
         WindowsNativeEventFilter::lastMessageContext = ctx;
@@ -1011,12 +1017,12 @@ namespace QWK {
         const auto &effectBugWorkaround = [this, hwnd]() {
             // We don't need the following *HACK* for QWidget windows.
             // Completely based on actual experiments, root reason is totally unknown.
-            
+
             // TODO: add more descriptions
             if (m_host->isWidgetType()) {
                 return;
             }
-            
+
             static const char *kPropKey = "_qwk_effectBugWorkaround1";
             if (property(kPropKey).toBool()) {
                 return;
@@ -2414,11 +2420,17 @@ namespace QWK {
                 ::ClientToScreen(hWnd, &menuPos);
                 nativeGlobalPos = menuPos;
 
+#ifdef __MINGW32__
+#  define MOUSE_HOOK CALLBACK
+#else
+#  define MOUSE_HOOK
+#endif
+
                 // Install mouse hook
                 if (!mouseHook) {
                     mouseHook = ::SetWindowsHookExW(
                         WH_MOUSE,
-                        [](int nCode, WPARAM wParam, LPARAM lParam) -> LRESULT {
+                        [](int nCode, WPARAM wParam, LPARAM lParam) -> LRESULT MOUSE_HOOK {
                             if (nCode >= 0) {
                                 switch (wParam) {
                                     case WM_LBUTTONDBLCLK:
@@ -2445,6 +2457,8 @@ namespace QWK {
                     mouseHookedLocal = true;
                 }
             }
+
+#undef MOUSE_HOOK
 
             bool res =
                 showSystemMenu_sys(hWnd, nativeGlobalPos, broughtByKeyboard, isHostSizeFixed());
